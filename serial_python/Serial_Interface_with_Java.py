@@ -5,8 +5,10 @@ import struct
 import math
 from multiprocessing import Process
 import multiprocessing
+import numpy as np
 
 baud = 9600 # 시리얼 보드레이트(통신속도)
+sigma, mu = 0.7, 0.2
 
 def gaussian_random(avg, cov):
     s = 1.0
@@ -39,7 +41,8 @@ def sensor_processing(port_name, average):
             packet.append(0xff)
             #data = random.random()
             #data = gaussian_random(average, 0.4)
-            data = float(random.uniform(average-0.1, average+0.1))
+            data = sigma * np.random.randn()+mu
+            #data = float(random.uniform(average-0.1, average+0.1))
             if port_name == "COM12":
                 print("COM12 Data: ", data)
             if port_name == "COM14":
