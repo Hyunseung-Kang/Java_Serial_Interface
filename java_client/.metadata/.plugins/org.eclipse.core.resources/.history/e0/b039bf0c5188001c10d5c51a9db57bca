@@ -1,0 +1,42 @@
+import java.io.*;
+import java.net.*;
+
+public class QuizClient {
+	public static void main(String[] args) throws IOException{
+		System.out.println("AA");
+		Socket quizSocket = null;
+		PrintWriter out = null;
+		BufferedReader in = null;
+		
+		try {
+			quizSocket = new Socket("127.0.0.1", 7779);
+			out = new PrintWriter(quizSocket.getOutputStream(), true);
+			
+			byte[] buffer = new byte[4];
+			buffer = {(byte)0x5a, 0x04, 0x05, 0x00, (byte)0xfe};
+			
+			in = new BufferedReader("AAAA"));
+			
+		}	catch(UnknownHostException e) {
+			System.err.println("Local host에 겁근할 수 없다.");
+			System.exit(1);
+			
+		}	catch(IOException e) {
+			System.err.println("입출력 오류");
+			System.exit(1);;
+		}
+		BufferedReader user = new BufferedReader(new InputStreamReader(System.in));
+		String fromServer;
+		String fromUser;
+		
+		while(true) {
+			System.out.println("클라이언트: "+"AA");
+			out.println("AAA");
+		}
+
+		//out.close();
+		//in.close();
+		//quizSocket.close();
+				
+	}
+}

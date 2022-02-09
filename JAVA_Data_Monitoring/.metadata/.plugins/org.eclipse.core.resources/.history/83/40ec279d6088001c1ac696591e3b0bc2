@@ -1,0 +1,543 @@
+import java.awt.BorderLayout;  
+import java.awt.Color;  
+import java.awt.event.ActionEvent;  
+import java.awt.event.ActionListener;  
+import java.util.ArrayList;  
+import java.util.List;  
+import java.util.Scanner;  
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.swing.SwingWorker;
+import javax.swing.JPanel;   
+import javax.swing.*;	//토글버튼
+
+import org.jfree.chart.ChartFactory;  
+import org.jfree.chart.ChartPanel;  
+import org.jfree.chart.JFreeChart;  
+import org.jfree.chart.plot.PlotOrientation;  
+import org.jfree.chart.plot.XYPlot;  
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;  
+import org.jfree.data.xy.XYSeries;  
+import org.jfree.data.xy.XYSeriesCollection;
+import org.knowm.xchart.QuickChart;
+import org.knowm.xchart.SwingWrapper;
+import org.knowm.xchart.XYChart;
+
+import Serial_Interface.Serial_Com;
+public class GUI extends javax.swing.JFrame{
+	@Override
+	public String getTitle() {
+		return ("Graph Voltage");
+	}
+	public GUI() {
+		initComponents();
+		graph_init();
+	}
+	
+	
+	static int x = 0;
+	static int l = 0;
+	static int X=0;
+	static double Y_1=0;
+	static double Y_2=0;
+	
+	LinkedList<Float> sensor1_fifo = new LinkedList<Float>();
+	LinkedList<Float> sensor2_fifo = new LinkedList<Float>();
+	Scanner scanner;
+	
+	
+	private javax.swing.JButton Clear;
+	
+	public Serial_Interface.Serial_Com port1, port2;
+	
+	
+	public ArrayList serial_port_names;
+	public String[] ComPort_List;
+	public String Sensor1_Port, Sensor2_Port;
+	public JToggleButton Sensor1_Connect;
+	public JToggleButton Sensor2_Connect;
+	public JToggleButton Server_Connect;
+	public javax.swing.JTextField ip_addr;
+	public javax.swing.JTextField socket_port; 
+	private javax.swing.JTextArea ImGraph;
+	private javax.swing.JTextArea jTextArea2; 
+	public javax.swing.JPanel graph; 
+	private javax.swing.JLabel IP_label;  // save all
+	private javax.swing.JLabel Socket_port_label;  // save all
+	private javax.swing.JLabel SERVER;  // save all
+	private javax.swing.JLabel SENSOR1;  // Graph Voltage
+	private javax.swing.JLabel SENSOR2;  // File Chosen
+	private javax.swing.JScrollPane ImgPane;	// 
+	private javax.swing.JScrollPane TextPane;  // 
+	private javax.swing.JTabbedPane jTabbedPane1;  	// 탭이 되는 판넬
+	public javax.swing.JComboBox<String> port1List;
+	public javax.swing.JComboBox<String> port2List;
+	
+	
+	XYSeriesCollection dataset = new XYSeriesCollection();  
+	JFreeChart chart = ChartFactory.createXYLineChart("", "Time", "Data", dataset, PlotOrientation.VERTICAL, true, true, false);
+	ChartPanel ch = new ChartPanel(chart);  
+	XYSeries sensor1_graph = new XYSeries("Sensor1");  
+    XYSeries sensor2_graph = new XYSeries("Sensor2");
+    Thread sensor1_thread = new get_sensor1_data();
+    Thread sensor2_thread = new get_sensor2_data();
+    
+    private boolean sensor1_stop;
+    private boolean sensor2_stop;
+
+    
+	private void graph_init() {
+		   graph.setLayout(new BorderLayout());   
+		     JPanel topPanel = new JPanel();  
+		     graph.add(topPanel,BorderLayout.NORTH );   
+
+		     //XYSeriesCollection dataset = new XYSeriesCollection();  
+		     //JFreeChart chart = ChartFactory.createXYLineChart("", "Time", "Data", dataset, PlotOrientation.VERTICAL, true, true, false);
+		     //ChartPanel ch = new ChartPanel(chart);
+		     
+		     
+		     // create the line graph  
+		     //XYSeries sensor1_graph = new XYSeries("Sensor1");  
+		     //XYSeries sensor2_graph = new XYSeries("Sensor2");  
+		     dataset.addSeries(sensor1_graph);  
+		     dataset.addSeries(sensor2_graph);  
+		     
+		     //JFreeChart chart = ChartFactory.createXYLineChart("", "Time", "Data", dataset, PlotOrientation.VERTICAL, true, true, false);  
+		     graph.add(new ChartPanel(chart),BorderLayout.BEFORE_LINE_BEGINS); /////////////////////////////  
+		     //ChartPanel ch = new ChartPanel(chart);  
+		     XYPlot xyPlot = chart.getXYPlot();  
+		     xyPlot.setDomainGridlinePaint(Color.red);  
+		     xyPlot.setRangeGridlinePaint(Color.blue);  
+		     
+		     org.jfree.chart.axis.ValueAxis rangeAxis = xyPlot.getRangeAxis();  
+		     XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();  
+		     renderer.setSeriesLinesVisible(1, true);  
+		     renderer.setSeriesShapesVisible(1, false);
+		     renderer.setSeriesLinesVisible(0, true);  
+		     renderer.setSeriesShapesVisible(0, false);
+		     
+		     xyPlot.setRenderer(renderer);
+		     rangeAxis.setRange(0.0, 1.5);
+		     rangeAxis.setAutoRangeMinimumSize(0.1);
+		     
+		     String filename = ip_addr.getText(); /////////////////////  
+		     //List XXX = new ArrayList();
+		     //List YYY = new ArrayList();
+		     
+		     //int XXX[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+		     //double YYY[] = {0.34, 0.15, 0.56, 0.62, 0.73, 0.68, 0.37, 0.76, 0.34, 0.14};
+		     
+		      
+
+		       //System.out.println(XXX.size());  
+		     /*  
+		     for (int i = 0; i < XXX.length;i++) {  
+
+		    	   X = XXX[i];
+		    	   Y = YYY[i];
+		         sensor1_graph.add(X,Y);  
+		         System.out.println(X);  
+		         System.out.println(Y);  
+		         ch.repaint();  
+		       } 
+		       */
+		     
+		     //////////////////////////////////////////////  
+		     //configure the connect button and use another thread to listen for data  
+		     graph.setVisible(true); 
+	}
+	
+	class get_sensor1_data extends Thread{
+		public void run() {
+			while(!sensor1_stop) {
+				float data = port1.reading.value;
+				System.out.println("sensor1: "+data);
+				//float data= (float)Math.random();
+				if(sensor1_fifo.size()>50) {
+					sensor1_fifo.removeFirst();
+				}
+				sensor1_fifo.add(data);
+				
+				float[] array = new float[sensor1_fifo.size()];
+				sensor1_graph.clear();
+				for(int i=0; i<sensor1_fifo.size(); i++) {
+					//System.out.println("sensor1_fifo["+i+"]: "+sensor1_fifo.get(i));
+					array[i] = sensor1_fifo.get(i);
+					X=i;
+					Y_1 = sensor1_fifo.get(i);
+					sensor1_graph.add(X, Y_1);
+					ch.repaint();
+				}
+				System.out.println("");
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+			     graph.setVisible(true); 
+				
+			} 
+
+			
+		}
+	}
+	
+	class get_sensor2_data extends Thread{
+		public void run() {
+			while(!sensor2_stop) {
+				float data = port2.reading.value;
+				System.out.println("sensor2 data: "+data);
+				//float data= (float)Math.random();
+				if(sensor2_fifo.size()>50) {
+					sensor2_fifo.removeFirst();
+				}
+				sensor2_fifo.add(data);
+				
+				float[] array = new float[sensor2_fifo.size()];
+				sensor2_graph.clear();
+				for(int i=0; i<sensor2_fifo.size(); i++) {
+					//System.out.println("sensor2_fifo["+i+"]: "+sensor2_fifo.get(i));
+					array[i] = sensor2_fifo.get(i);
+					X=i;
+					Y_2 = sensor2_fifo.get(i);
+					sensor2_graph.add(X, Y_2);
+					ch.repaint();
+				}
+				System.out.println("");
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			     graph.setVisible(true);  
+
+				
+				
+			}
+			
+		}
+	}
+	
+	private void initComponents() {
+		SERVER = new javax.swing.JLabel();
+		SENSOR1 = new javax.swing.JLabel();
+		SENSOR2 = new javax.swing.JLabel();
+		IP_label = new javax.swing.JLabel();
+		Socket_port_label = new javax.swing.JLabel();
+		
+	    Sensor1_Connect = new JToggleButton();
+	    Sensor2_Connect = new JToggleButton();
+	    Server_Connect = new JToggleButton();
+		Clear = new javax.swing.JButton();
+
+	    port1 = new Serial_Com();
+	    port2 = new Serial_Com();
+	    		 
+	      
+	    ip_addr = new javax.swing.JTextField();  
+	    socket_port = new javax.swing.JTextField();
+	      
+	    port1List = new javax.swing.JComboBox<>();  
+	    port2List = new javax.swing.JComboBox<>();   
+	    
+	    jTabbedPane1 = new javax.swing.JTabbedPane();
+	    ImgPane = new javax.swing.JScrollPane();  
+	    TextPane = new javax.swing.JScrollPane();
+
+	    ImGraph = new javax.swing.JTextArea();
+	    jTextArea2 = new javax.swing.JTextArea();
+	 
+	    graph = new javax.swing.JPanel();
+
+	    setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);  
+	    setBackground(new java.awt.Color(204, 204, 204));  
+
+	    SERVER.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N  
+	    SERVER.setForeground(new java.awt.Color(0, 0, 0));  
+	    SERVER.setText("SERVER");  
+	    SENSOR1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N  
+	    SENSOR1.setForeground(new java.awt.Color(0, 0, 0));  
+	    SENSOR1.setText("Sensor1");  
+	    SENSOR2.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N  
+	    SENSOR2.setForeground(new java.awt.Color(0, 0, 0));  
+	    SENSOR2.setText("Sensor2");
+
+	    IP_label.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N  
+	    IP_label.setForeground(new java.awt.Color(0, 0, 0));  
+	    IP_label.setText("IP");
+	    
+	    Socket_port_label.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N  
+	    Socket_port_label.setForeground(new java.awt.Color(0, 0, 0));  
+	    Socket_port_label.setText("PORT");
+	     
+	    
+	    Sensor1_Connect.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N  
+	    Sensor1_Connect.setText("Connect1");  
+	    Sensor1_Connect.addActionListener(new java.awt.event.ActionListener() {  
+	       public void actionPerformed(java.awt.event.ActionEvent evt) {  
+	         Sensor1_Connect_Performed(evt);
+	       }
+	    });
+	    
+	    Sensor2_Connect.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N  
+	    Sensor2_Connect.setText("Connect2");  
+	    Sensor2_Connect.addActionListener(new java.awt.event.ActionListener() {  
+	       public void actionPerformed(java.awt.event.ActionEvent evt) {  
+	         Sensor2_Connect_Performed(evt);  
+	       }  
+	     });
+	    
+	    Server_Connect.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N  
+	    Server_Connect.setText("Connect Server");  
+	    Server_Connect.addActionListener(new java.awt.event.ActionListener() {  
+	       public void actionPerformed(java.awt.event.ActionEvent evt) {  
+	         Server_Connect_Performed(evt);  
+	       }  
+	     });
+	    
+	    Clear.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N  
+	    Clear.setText("CLEAR");  
+	    Clear.addActionListener(new java.awt.event.ActionListener() {  
+	      public void actionPerformed(java.awt.event.ActionEvent evt) {  
+	         ClearActionPerformed(evt);  
+	       }  
+	    });  
+	    
+	    ip_addr.setCursor(new java.awt.Cursor(java.awt.Cursor.TEXT_CURSOR));  
+	    ip_addr.addActionListener(new java.awt.event.ActionListener() {  
+	    	public void actionPerformed(java.awt.event.ActionEvent evt) {  
+	    	}
+	     });  
+	    
+	    socket_port.setCursor(new java.awt.Cursor(java.awt.Cursor.TEXT_CURSOR));  
+	    socket_port.addActionListener(new java.awt.event.ActionListener() {  
+	    	public void actionPerformed(java.awt.event.ActionEvent evt) {  
+	    	}
+	     }); 
+	     
+	     port1List.addActionListener(new java.awt.event.ActionListener() {  
+		       public void actionPerformed(java.awt.event.ActionEvent evt) {  
+		         port1ListActionPerformed(evt);  
+		       }  
+		     });
+	     port2List.addActionListener(new java.awt.event.ActionListener() {  
+		       public void actionPerformed(java.awt.event.ActionEvent evt) {  
+		         port2ListActionPerformed(evt);  
+		       }  
+		     }); 
+	     
+	     jTabbedPane1.setTabPlacement(javax.swing.JTabbedPane.RIGHT);  
+	     jTabbedPane1.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N  
+	     ImGraph.setColumns(20);  
+	     ImGraph.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N  
+	     ImGraph.setRows(5);  
+	     
+	     ImgPane.setViewportView(ImGraph);  
+	     
+	     javax.swing.GroupLayout graphLayout = new javax.swing.GroupLayout(graph);  
+	     graph.setLayout(graphLayout);  
+	     graphLayout.setHorizontalGroup(  
+	       graphLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)  
+	       .addGap(0, 683, Short.MAX_VALUE)  
+	     );  
+	     graphLayout.setVerticalGroup(  
+	       graphLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)  
+	       .addGap(0, 573, Short.MAX_VALUE)  
+	     );
+	     jTabbedPane1.addTab("Plot", graph);  
+	     
+	     port1List.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Sensor1", "COMPORT1" }));
+	     port2List.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Sensor2", "COMPORT2" }));
+	     
+	     
+	     jTextArea2.setBackground(new java.awt.Color(255, 243, 21));  
+	     jTextArea2.setColumns(20);  // Area에 가로/세로 몇개의 텍스트를 작성할 수 있는지 설정
+	     jTextArea2.setRows(5);  
+	     
+	     TextPane.setViewportView(jTextArea2);
+	     
+	     javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());  
+	     getContentPane().setLayout(layout);
+	     layout.setAutoCreateGaps(true);
+	     
+	     //port1List.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Sensor1", "COMPORT1" }));
+	     //port1List.setModel(new javax.swing.DefaultComboBoxModel<>(serial_port_names));
+	     serial_port_names = port1.get_port_names();
+	     ComPort_List = new String[serial_port_names.size()];
+	     for(int i=0; i<serial_port_names.size(); i++) {
+	    	 ComPort_List[i] = (String) serial_port_names.get(i);
+	     }
+	     port1List.setModel(new javax.swing.DefaultComboBoxModel<>(ComPort_List));
+	     port2List.setModel(new javax.swing.DefaultComboBoxModel<>(ComPort_List));
+	     
+	     
+	     layout.setHorizontalGroup(  
+	       layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING) 
+	       .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+	    		   .addComponent(jTabbedPane1)	  		       
+	  	           .addGroup(layout.createSequentialGroup()
+	  	        		   .addComponent(IP_label)
+	  	        		   .addComponent(Socket_port_label)
+	  	        		 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+	  	        				 .addComponent(SERVER, javax.swing.GroupLayout.PREFERRED_SIZE, 103, javax.swing.GroupLayout.PREFERRED_SIZE)
+	  	        				 .addComponent(Clear, 150, 150, 150)
+	  	    	        		 .addComponent(SENSOR1)
+	  	    	        		 .addComponent(ip_addr, 150, 150, 150)
+	  	    	        		 .addComponent(socket_port, 150, 150, 150)
+	  	    	        		 .addComponent(port1List, 100, 100, 100)
+	  	    	        		 .addComponent(Sensor1_Connect, javax.swing.GroupLayout.PREFERRED_SIZE, 102, javax.swing.GroupLayout.PREFERRED_SIZE)
+	  	    	        		 )
+	  	        		 .addGap(20, 20, 20)
+		        		 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+		        		 .addComponent(Server_Connect, 150, 150, 150)
+		        		 .addComponent(SENSOR2, javax.swing.GroupLayout.PREFERRED_SIZE, 103, javax.swing.GroupLayout.PREFERRED_SIZE)
+		        		 .addComponent(Sensor2_Connect, 100, 100, 100)
+		        		 .addComponent(port2List, 100, 100, 100))
+		        		 )
+    		 )
+	         .addComponent(TextPane, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 950, Short.MAX_VALUE) 
+	     );  
+	     
+	     
+	     layout.setVerticalGroup(
+	    		 layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+	    		 .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+	    				 .addGap(50, 50, 50)
+	    		         .addComponent(SERVER, 40, 40, 40)
+	    		         .addGap(15, 15, 15)
+	    		         
+	    		         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+	    		         .addComponent(ip_addr, 30, 30, 30)
+	    		         .addComponent(IP_label)
+	    		         
+	    		         .addComponent(Server_Connect))
+	    		         .addComponent(Socket_port_label)
+	    		         .addComponent(socket_port, 30, 30, 30)
+	    		         .addGap(50, 50, 50)
+	    		         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+	    		        		 .addComponent(SENSOR1, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)  
+	    		    	         .addComponent(SENSOR2, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE))
+	    		    	         .addGap(10, 10, 10)
+	    		    	         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+	    		    	        		 .addComponent(port1List, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+	    		    	    	         .addComponent(port2List, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+	    		    	    	         .addGap(10, 10, 10)
+	    		    	    	         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+	    		    	    	        		 .addComponent(Sensor2_Connect)
+	    		    	    	    	         .addComponent(Sensor1_Connect))
+	    		    	    	    	         .addGap(70, 70, 70)
+	    		    	    	    	         .addComponent(Clear, 50, 50, 50))
+	    		 .addComponent(jTabbedPane1, javax.swing.GroupLayout.Alignment.TRAILING)  
+	  	         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+	  	        		.addComponent(TextPane, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 578, Short.MAX_VALUE))
+	  	         );	         
+	     pack();  
+	   }// </editor-fold>//GEN-END:initComponents  
+
+
+	   private void Sensor1_Connect_Performed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_RunActionPerformed
+		   Sensor1_Port = (String) port1List.getSelectedItem();
+		   if(Sensor1_Connect.isSelected()) {
+			   try {
+				   port1.connect(Sensor1_Port);
+				   sensor1_stop = false;
+				   sensor1_thread = new get_sensor1_data();
+				   sensor1_thread.start();
+			   }	catch(Exception e) {
+				   e.printStackTrace();
+			   }
+		   }
+		   else {
+			   sensor1_stop = true;
+			   port1.disconnect();
+		   }
+	   }//GEN-LAST:event_RunActionPerformed
+	   private void Sensor2_Connect_Performed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_RunActionPerformed 
+		   Sensor2_Port = (String) port2List.getSelectedItem();
+		   if(Sensor2_Connect.isSelected()) {
+			   try {
+				   port2.connect(Sensor2_Port);
+				   sensor2_stop = false;
+				   sensor2_thread = new get_sensor2_data();
+				   sensor2_thread.start();
+			   }	catch(Exception e) {
+				   e.printStackTrace();
+			   }
+		   }
+		   else {
+			   sensor2_stop = true;
+			   port2.disconnect();
+		   }
+	   }//GEN-LAST:event_RunActionPerformed  
+	   private void Server_Connect_Performed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_RunActionPerformed  
+		   String filename = ip_addr.getText(); //URL of json file  
+		   
+	   }//GEN-LAST:event_RunActionPerformed  
+
+	   private void ClearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ClearActionPerformed  
+		   sensor1_graph.clear();
+		   sensor2_graph.clear();
+		   /*
+	     ImGraph.setText("");  
+	     ip_addr.setText("");  
+	     graph.setLayout(new BorderLayout());   
+	     JPanel topPanel = new JPanel();  
+	     graph.add(topPanel,BorderLayout.NORTH );   
+	     // create the line graph  
+	     XYSeries series = new XYSeries("Frist");  
+	     XYSeries series2 = new XYSeries("Second");  
+	     XYSeriesCollection dataset = new XYSeriesCollection();  
+	     dataset.addSeries(series);  
+	     dataset.addSeries(series2);  
+	     JFreeChart chart = ChartFactory.createXYLineChart("", "Time", "Reading", dataset, PlotOrientation.VERTICAL, true, true, false);  
+	     graph.add(new ChartPanel(chart),BorderLayout.BEFORE_LINE_BEGINS); /////////////////////////////  
+	     ChartPanel ch = new ChartPanel(chart);  
+	     XYPlot xyPlot = chart.getXYPlot();  
+	     org.jfree.chart.axis.ValueAxis domainAxis = xyPlot.getDomainAxis();  
+	     org.jfree.chart.axis.ValueAxis rangeAxis = xyPlot.getRangeAxis();  
+	     rangeAxis.setRange(0.0, 1100.0);  
+	     rangeAxis.setAutoRangeMinimumSize(0.1);   
+	     //configure the connect button and use another thread to listen for data 
+	      *   
+	      */
+	     graph.setVisible(true);  
+	   }//GEN-LAST:event_ClearActionPerformed  
+
+	   private void port1ListActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_portListActionPerformed
+		   
+		   
+		   
+		   }//GEN-LAST:event_portListActionPerformed  
+	   private void port2ListActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_portListActionPerformed  
+		     // TODO add your handling code here:  
+		   }//GEN-LAST:event_portListActionPerformed  
+
+
+	     
+
+	   /**  
+	    * @param args the command line arguments  
+	    */  
+	   public static void main(String args[]) {  
+	    
+//	     try {  
+//	       for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {  
+//	         if ("Nimbus".equals(info.getName())) {  
+//	           javax.swing.UIManager.setLookAndFeel(info.getClassName());  
+//	           break;  
+//	         }  
+//	       }  
+//	     } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) { 
+//	     }  
+	     /* Create and display the form */  
+	     java.awt.EventQueue.invokeLater(new Runnable() {  
+	       public void run() {
+	    	   new GUI().setVisible(true);
+	       }  
+	     });  
+	   }
+}

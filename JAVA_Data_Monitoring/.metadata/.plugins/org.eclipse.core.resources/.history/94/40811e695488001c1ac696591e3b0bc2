@@ -1,0 +1,18 @@
+import java.io.*;
+import java.net.*;
+
+public class Client {
+	public Client() {
+		super();
+	}
+	private String ServerIP;
+	private int ServerPort;
+	private int DelayTime;
+	private InetSocketAddress Svr;
+	private Socket socket;
+	PrintWriter out = null;
+	
+	
+	
+	
+}
