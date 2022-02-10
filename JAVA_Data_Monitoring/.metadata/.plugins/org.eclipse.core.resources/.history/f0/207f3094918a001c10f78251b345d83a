@@ -24,6 +24,18 @@ public class GUI extends javax.swing.JFrame{
 	// 그리고 경우에 따라 제대로 객체를 불러올 수 없는 문제가 발생할 수 있으므로 이를 지정해주는 것을 지향하자.
 	private static final long serialVersionUID = 1L;
 
+
+	@Override
+	public String getTitle() {
+		return ("External Device Monitoring");
+	}
+	
+	// 생성자 구성
+	public GUI() {
+		initComponents();
+		graph_init();
+	}
+	
 	static double sensor1_thr = 1.2;
 	static double sensor2_thr = 0.7;
 	private javax.swing.JButton Clear;
@@ -61,17 +73,7 @@ public class GUI extends javax.swing.JFrame{
 	private LinkedList<Float> sensor2_fifo;
 	private Scanner scanner;
 	
-	
-	@Override
-	public String getTitle() {
-		return ("External Device Monitoring");
-	}
-	
-	// 생성자 구성
-	public GUI() {
-		initComponents();
-		graph_init();
-	}
+
     
 	private void graph_init() {
 		dataset = new XYSeriesCollection();  
@@ -83,11 +85,13 @@ public class GUI extends javax.swing.JFrame{
 	    sensor2_thread = new get_sensor2_data();
 		sensor1_fifo = new LinkedList<Float>();
 		sensor2_fifo = new LinkedList<Float>();
-		graph.setLayout(new BorderLayout());   
-		JPanel topPanel = new JPanel();  
-		graph.add(topPanel,BorderLayout.NORTH );
-		dataset.addSeries(sensor1_graph);  
-		dataset.addSeries(sensor2_graph);  
+		
+		
+		   graph.setLayout(new BorderLayout());   
+		     JPanel topPanel = new JPanel();  
+		     graph.add(topPanel,BorderLayout.NORTH );
+		     dataset.addSeries(sensor1_graph);  
+		     dataset.addSeries(sensor2_graph);  
 		     
 		     //JFreeChart chart = ChartFactory.createXYLineChart("", "Time", "Data", dataset, PlotOrientation.VERTICAL, true, true, false);  
 		     graph.add(new ChartPanel(chart),BorderLayout.BEFORE_LINE_BEGINS); /////////////////////////////  

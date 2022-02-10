@@ -62,6 +62,8 @@ public class GUI extends javax.swing.JFrame{
 	private Scanner scanner;
 	
 	
+
+
 	@Override
 	public String getTitle() {
 		return ("External Device Monitoring");
@@ -72,6 +74,9 @@ public class GUI extends javax.swing.JFrame{
 		initComponents();
 		graph_init();
 	}
+	
+	
+	
     
 	private void graph_init() {
 		dataset = new XYSeriesCollection();  
@@ -83,11 +88,13 @@ public class GUI extends javax.swing.JFrame{
 	    sensor2_thread = new get_sensor2_data();
 		sensor1_fifo = new LinkedList<Float>();
 		sensor2_fifo = new LinkedList<Float>();
-		graph.setLayout(new BorderLayout());   
-		JPanel topPanel = new JPanel();  
-		graph.add(topPanel,BorderLayout.NORTH );
-		dataset.addSeries(sensor1_graph);  
-		dataset.addSeries(sensor2_graph);  
+		
+		
+		   graph.setLayout(new BorderLayout());   
+		     JPanel topPanel = new JPanel();  
+		     graph.add(topPanel,BorderLayout.NORTH );
+		     dataset.addSeries(sensor1_graph);  
+		     dataset.addSeries(sensor2_graph);  
 		     
 		     //JFreeChart chart = ChartFactory.createXYLineChart("", "Time", "Data", dataset, PlotOrientation.VERTICAL, true, true, false);  
 		     graph.add(new ChartPanel(chart),BorderLayout.BEFORE_LINE_BEGINS); /////////////////////////////  

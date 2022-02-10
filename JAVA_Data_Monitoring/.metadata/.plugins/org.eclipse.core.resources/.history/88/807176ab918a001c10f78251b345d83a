@@ -86,8 +86,8 @@ public class GUI extends javax.swing.JFrame{
 		graph.setLayout(new BorderLayout());   
 		JPanel topPanel = new JPanel();  
 		graph.add(topPanel,BorderLayout.NORTH );
-		dataset.addSeries(sensor1_graph);  
-		dataset.addSeries(sensor2_graph);  
+		     dataset.addSeries(sensor1_graph);  
+		     dataset.addSeries(sensor2_graph);  
 		     
 		     //JFreeChart chart = ChartFactory.createXYLineChart("", "Time", "Data", dataset, PlotOrientation.VERTICAL, true, true, false);  
 		     graph.add(new ChartPanel(chart),BorderLayout.BEFORE_LINE_BEGINS); /////////////////////////////  
