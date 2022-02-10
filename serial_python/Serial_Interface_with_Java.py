@@ -43,10 +43,10 @@ def sensor_processing(port_name, average):
             #data = gaussian_random(average, 0.4)
             data = sigma * np.random.randn()+mu
             #data = float(random.uniform(average-0.1, average+0.1))
-            if port_name == "COM12":
-                print("COM12 Data: ", data)
-            if port_name == "COM14":
-                print("COM14 Data: ", data)
+            #if port_name == "COM10":
+                #print("COM12 Data: ", data)
+            #if port_name == "COM12":
+                #print("COM14 Data: ", data)
             hex_data = bytearray(struct.pack("f", data))
             for i in range(len(hex_data)):
                 packet.append(hex_data[i])
@@ -63,8 +63,8 @@ def sensor_processing(port_name, average):
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    port1 = "COM12"
-    port2 = "COM14"
+    port1 = "COM10"
+    port2 = "COM12"
     sensor1 = multiprocessing.Process(target=sensor_processing, args=(port1, 0.8))
     sensor2 = multiprocessing.Process(target=sensor_processing, args=(port2, 0.3))
     sensor1.start()

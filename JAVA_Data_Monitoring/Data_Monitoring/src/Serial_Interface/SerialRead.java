@@ -4,7 +4,6 @@ package Serial_Interface;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-//import gnu.io.SerialPort;
 
 public class SerialRead implements Runnable{
 	InputStream in;
@@ -12,7 +11,6 @@ public class SerialRead implements Runnable{
 	
 	public SerialRead(InputStream in) {
 		this.in = in;
-		//boolean thread_flag = false;
 	}
 	
 	public static double convertToDouble(byte[] array) {
@@ -33,12 +31,9 @@ public class SerialRead implements Runnable{
 		try {
 			
 			while(!stop) {
-				//System.out.println("stop: "+stop);
 				
 				byte[] buffer = new byte[8];
 				byte[] data = new byte[4];
-				//byte[] buffer = new byte[4];
-				//System.out.println("Reading");
 	
 				if(this.in.read(buffer)==8) {
 					if(((buffer[0]&0xff) == 170)&&((buffer[1]&0xff) == 255) 
@@ -46,17 +41,13 @@ public class SerialRead implements Runnable{
 						for(int i=0; i<4; i++) {
 							data[3-i] = buffer[i+2];
 						}
-						//System.out.print("Received: "+(buffer[2]&0xff)+"  "+(buffer[3]&0xff)
-							//	+"  "+(buffer[4]&0xff)+"  "+(buffer[5]&0xff));
 					}
 					int intvalue= 0;
 					for(byte b:data) {
 						intvalue = (intvalue<<8)+(b&0xFF);
 					}
 					value = Float.intBitsToFloat(intvalue);
-					//System.out.println("value: "+value);
 				}
-				//System.out.println("reading");
 				Thread.sleep(100);
 			}
 		}

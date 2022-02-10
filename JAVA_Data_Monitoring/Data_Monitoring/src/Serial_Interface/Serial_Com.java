@@ -9,7 +9,6 @@ import java.util.Enumeration;
 import java.util.ArrayList;
 
 
-
 public class Serial_Com {
 	public Serial_Com() {
 		super();

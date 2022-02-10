@@ -1,14 +1,10 @@
 import java.awt.BorderLayout;  
 import java.awt.Color;  
-import java.awt.event.ActionEvent;  
-import java.awt.event.ActionListener;  
+import java.io.IOException;
 import java.util.ArrayList;  
-import java.util.List;  
 import java.util.Scanner;  
 import java.util.LinkedList;
-import java.util.List;
 
-import javax.swing.SwingWorker;
 import javax.swing.JPanel;   
 import javax.swing.*;	//토글버튼
 
@@ -20,38 +16,31 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;  
 import org.jfree.data.xy.XYSeries;  
 import org.jfree.data.xy.XYSeriesCollection;
-import org.knowm.xchart.QuickChart;
-import org.knowm.xchart.SwingWrapper;
-import org.knowm.xchart.XYChart;
 
 import Serial_Interface.Serial_Com;
 public class GUI extends javax.swing.JFrame{
+	
+	// 아래 serialVersionUID 값을 부여하지 않을 경우 컴파일러가 계산한 값을 부여한다.
+	// 그리고 경우에 따라 제대로 객체를 불러올 수 없는 문제가 발생할 수 있으므로 이를 지정해주는 것을 지향하자.
+	private static final long serialVersionUID = 1L;
+
+
 	@Override
 	public String getTitle() {
-		return ("Graph Voltage");
+		return ("External Device Monitoring");
 	}
+	
+	// 생성자 구성
 	public GUI() {
 		initComponents();
 		graph_init();
 	}
 	
 	
-	static int x = 0;
-	static int l = 0;
-	static int X=0;
-	static double Y_1=0;
-	static double Y_2=0;
-	
-	LinkedList<Float> sensor1_fifo = new LinkedList<Float>();
-	LinkedList<Float> sensor2_fifo = new LinkedList<Float>();
-	Scanner scanner;
-	
-	
+	static double sensor1_thr = 1.2;
+	static double sensor2_thr = 0.7;
 	private javax.swing.JButton Clear;
-	
 	public Serial_Interface.Serial_Com port1, port2;
-	
-	
 	public ArrayList serial_port_names;
 	public String[] ComPort_List;
 	public String Sensor1_Port, Sensor2_Port;
@@ -69,35 +58,39 @@ public class GUI extends javax.swing.JFrame{
 	private javax.swing.JScrollPane ImgPane;	// 
 	private javax.swing.JScrollPane TextPane;  // 
 	private javax.swing.JTabbedPane jTabbedPane1;  	// 탭이 되는 판넬
-	public javax.swing.JComboBox<String> port1List;
-	public javax.swing.JComboBox<String> port2List;
-	
-	
-	XYSeriesCollection dataset = new XYSeriesCollection();  
-	JFreeChart chart = ChartFactory.createXYLineChart("", "Time", "Data", dataset, PlotOrientation.VERTICAL, true, true, false);
-	ChartPanel ch = new ChartPanel(chart);  
-	XYSeries sensor1_graph = new XYSeries("Sensor1");  
-    XYSeries sensor2_graph = new XYSeries("Sensor2");
-    Thread sensor1_thread = new get_sensor1_data();
-    Thread sensor2_thread = new get_sensor2_data();
-    
+	private Client client;
+	private javax.swing.JComboBox<String> port1List;
+	private javax.swing.JComboBox<String> port2List;
     private boolean sensor1_stop;
     private boolean sensor2_stop;
+	private XYSeriesCollection dataset;
+	private JFreeChart chart;
+	private ChartPanel ch;
+	private XYSeries sensor1_graph;
+	private XYSeries sensor2_graph;
+	private Thread sensor1_thread;
+	private Thread sensor2_thread;
+	private LinkedList<Float> sensor1_fifo;
+	private LinkedList<Float> sensor2_fifo;
+	private Scanner scanner;
+	
 
     
 	private void graph_init() {
+		dataset = new XYSeriesCollection();  
+		chart = ChartFactory.createXYLineChart("", "Time", "Data", dataset, PlotOrientation.VERTICAL, true, true, false);
+		ch = new ChartPanel(chart);  
+		sensor1_graph = new XYSeries("Sensor1");  
+	    sensor2_graph = new XYSeries("Sensor2");
+	    sensor1_thread = new get_sensor1_data();
+	    sensor2_thread = new get_sensor2_data();
+		sensor1_fifo = new LinkedList<Float>();
+		sensor2_fifo = new LinkedList<Float>();
+		
+		
 		   graph.setLayout(new BorderLayout());   
 		     JPanel topPanel = new JPanel();  
-		     graph.add(topPanel,BorderLayout.NORTH );   
-
-		     //XYSeriesCollection dataset = new XYSeriesCollection();  
-		     //JFreeChart chart = ChartFactory.createXYLineChart("", "Time", "Data", dataset, PlotOrientation.VERTICAL, true, true, false);
-		     //ChartPanel ch = new ChartPanel(chart);
-		     
-		     
-		     // create the line graph  
-		     //XYSeries sensor1_graph = new XYSeries("Sensor1");  
-		     //XYSeries sensor2_graph = new XYSeries("Sensor2");  
+		     graph.add(topPanel,BorderLayout.NORTH );
 		     dataset.addSeries(sensor1_graph);  
 		     dataset.addSeries(sensor2_graph);  
 		     
@@ -120,37 +113,24 @@ public class GUI extends javax.swing.JFrame{
 		     rangeAxis.setRange(0.0, 1.5);
 		     rangeAxis.setAutoRangeMinimumSize(0.1);
 		     
-		     String filename = ip_addr.getText(); /////////////////////  
-		     //List XXX = new ArrayList();
-		     //List YYY = new ArrayList();
-		     
-		     //int XXX[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-		     //double YYY[] = {0.34, 0.15, 0.56, 0.62, 0.73, 0.68, 0.37, 0.76, 0.34, 0.14};
-		     
-		      
+		     String filename = ip_addr.getText();
 
-		       //System.out.println(XXX.size());  
-		     /*  
-		     for (int i = 0; i < XXX.length;i++) {  
-
-		    	   X = XXX[i];
-		    	   Y = YYY[i];
-		         sensor1_graph.add(X,Y);  
-		         System.out.println(X);  
-		         System.out.println(Y);  
-		         ch.repaint();  
-		       } 
-		       */
-		     
 		     //////////////////////////////////////////////  
 		     //configure the connect button and use another thread to listen for data  
 		     graph.setVisible(true); 
 	}
 	
 	class get_sensor1_data extends Thread{
+		static double prev_data = 0.0;
+		static int X = 0;
+		static double Y_1=0;
 		public void run() {
 			while(!sensor1_stop) {
 				float data = port1.reading.value;
+				if (data > sensor1_thr && prev_data != data) {
+					client.send_data(data, "sensor1");
+					prev_data = data;
+				}
 				System.out.println("sensor1: "+data);
 				//float data= (float)Math.random();
 				if(sensor1_fifo.size()>50) {
@@ -177,17 +157,22 @@ public class GUI extends javax.swing.JFrame{
 				}
 
 			     graph.setVisible(true); 
-				
 			} 
-
-			
 		}
 	}
 	
 	class get_sensor2_data extends Thread{
+		static double prev_data = 0.0;
+		static int X = 0;
+		static double Y_2=0;
 		public void run() {
 			while(!sensor2_stop) {
 				float data = port2.reading.value;
+				if (data > sensor2_thr && prev_data != data) {
+					client.send_data(data, "sensor2");
+					prev_data = data;
+				}
+				
 				System.out.println("sensor2 data: "+data);
 				//float data= (float)Math.random();
 				if(sensor2_fifo.size()>50) {
@@ -226,6 +211,8 @@ public class GUI extends javax.swing.JFrame{
 		SENSOR1 = new javax.swing.JLabel();
 		SENSOR2 = new javax.swing.JLabel();
 		IP_label = new javax.swing.JLabel();
+		
+		client = new Client();
 		
 	    Sensor1_Connect = new JToggleButton();
 	    Sensor2_Connect = new JToggleButton();
@@ -266,8 +253,6 @@ public class GUI extends javax.swing.JFrame{
 	    IP_label.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N  
 	    IP_label.setForeground(new java.awt.Color(0, 0, 0));  
 	    IP_label.setText("IP");
-	    
-	     
 	    
 	    Sensor1_Connect.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N  
 	    Sensor1_Connect.setText("Connect1");  
@@ -456,8 +441,14 @@ public class GUI extends javax.swing.JFrame{
 		   }
 	   }//GEN-LAST:event_RunActionPerformed  
 	   private void Server_Connect_Performed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_RunActionPerformed  
-		   String filename = ip_addr.getText(); //URL of json file  
-		   
+		   if(Server_Connect.isSelected()) {
+			   String ip_address = ip_addr.getText();
+			   try {
+				   client.connect_to_server(ip_address);
+			   }	catch(IOException e) {
+					e.printStackTrace();
+			   }
+		   }
 	   }//GEN-LAST:event_RunActionPerformed  
 
 	   private void ClearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ClearActionPerformed  
@@ -505,16 +496,7 @@ public class GUI extends javax.swing.JFrame{
 	    * @param args the command line arguments  
 	    */  
 	   public static void main(String args[]) {  
-	    
-//	     try {  
-//	       for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {  
-//	         if ("Nimbus".equals(info.getName())) {  
-//	           javax.swing.UIManager.setLookAndFeel(info.getClassName());  
-//	           break;  
-//	         }  
-//	       }  
-//	     } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) { 
-//	     }  
+
 	     /* Create and display the form */  
 	     java.awt.EventQueue.invokeLater(new Runnable() {  
 	       public void run() {
