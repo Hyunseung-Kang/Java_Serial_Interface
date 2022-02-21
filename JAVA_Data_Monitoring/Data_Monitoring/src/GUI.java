@@ -21,14 +21,15 @@ import Serial_Interface.Serial_Com;
 public class GUI extends javax.swing.JFrame{
 	
 	// 아래 serialVersionUID 값을 부여하지 않을 경우 컴파일러가 계산한 값을 부여한다.
-	// 그리고 경우에 따라 제대로 객체를 불러올 수 없는 문제가 발생할 수 있으므로 이를 지정해주는 것을 지향하자.
+	// 그리고 경우에 따라 제대로 객체를 불러올 수 없는 문제가 발생할 수 있으므로 이를 지정해주는 습관을 들이자.
 	private static final long serialVersionUID = 1L;
 
-	static double sensor1_thr = 1.2;
+	static double sensor1_thr = 1.2;		// Client에서 서버로 데이터를 전송하는 임계값
 	static double sensor2_thr = 0.7;
+	static int data_num = 50;				// GUI에 그래프를 나타내기 위한 데이터 수
 	private javax.swing.JButton Clear;
 	public Serial_Interface.Serial_Com port1, port2;
-	public ArrayList serial_port_names;
+	public ArrayList<String> serial_port_names;
 	public String[] ComPort_List;
 	public String Sensor1_Port, Sensor2_Port;
 	public JToggleButton Sensor1_Connect;
@@ -38,12 +39,12 @@ public class GUI extends javax.swing.JFrame{
 	private javax.swing.JTextArea ImGraph;
 	private javax.swing.JTextArea jTextArea2; 
 	public javax.swing.JPanel graph; 
-	private javax.swing.JLabel IP_label;  // save all
-	private javax.swing.JLabel SERVER;  // save all
-	private javax.swing.JLabel SENSOR1;  // Graph Voltage
-	private javax.swing.JLabel SENSOR2;  // File Chosen
-	private javax.swing.JScrollPane ImgPane;	// 
-	private javax.swing.JScrollPane TextPane;  // 
+	private javax.swing.JLabel IP_label;
+	private javax.swing.JLabel SERVER;  
+	private javax.swing.JLabel SENSOR1;  
+	private javax.swing.JLabel SENSOR2;  
+	private javax.swing.JScrollPane ImgPane;
+	private javax.swing.JScrollPane TextPane;
 	private javax.swing.JTabbedPane jTabbedPane1;  	// 탭이 되는 판넬
 	private Client client;
 	private javax.swing.JComboBox<String> port1List;
@@ -59,7 +60,6 @@ public class GUI extends javax.swing.JFrame{
 	private Thread sensor2_thread;
 	private LinkedList<Float> sensor1_fifo;
 	private LinkedList<Float> sensor2_fifo;
-	private Scanner scanner;
 	
 	
 	@Override
@@ -83,36 +83,42 @@ public class GUI extends javax.swing.JFrame{
 	    sensor2_thread = new get_sensor2_data();
 		sensor1_fifo = new LinkedList<Float>();
 		sensor2_fifo = new LinkedList<Float>();
+		queue_initialize(sensor1_fifo, sensor2_fifo);
+		
 		graph.setLayout(new BorderLayout());   
 		JPanel topPanel = new JPanel();  
 		graph.add(topPanel,BorderLayout.NORTH );
-		dataset.addSeries(sensor1_graph);  
-		dataset.addSeries(sensor2_graph);  
-		     
-		     //JFreeChart chart = ChartFactory.createXYLineChart("", "Time", "Data", dataset, PlotOrientation.VERTICAL, true, true, false);  
-		     graph.add(new ChartPanel(chart),BorderLayout.BEFORE_LINE_BEGINS); /////////////////////////////  
-		     //ChartPanel ch = new ChartPanel(chart);  
+		dataset.addSeries(sensor1_graph);
+		dataset.addSeries(sensor2_graph);
+		
+		graph.add(new ChartPanel(chart),BorderLayout.BEFORE_LINE_BEGINS);
 		     XYPlot xyPlot = chart.getXYPlot();  
 		     xyPlot.setDomainGridlinePaint(Color.red);  
 		     xyPlot.setRangeGridlinePaint(Color.blue);  
 		     xyPlot.setBackgroundPaint(Color.white);
-		     
 		     org.jfree.chart.axis.ValueAxis rangeAxis = xyPlot.getRangeAxis();  
 		     XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();  
 		     renderer.setSeriesLinesVisible(1, true);  
 		     renderer.setSeriesShapesVisible(1, false);
 		     renderer.setSeriesLinesVisible(0, true);  
 		     renderer.setSeriesShapesVisible(0, false);
-		     
 		     xyPlot.setRenderer(renderer);
-		     rangeAxis.setRange(0.0, 1.5);
+		     //rangeAxis.setRange(0.0, 1.5);
+		     rangeAxis.setAutoRange(true);
 		     rangeAxis.setAutoRangeMinimumSize(0.1);
-		     
-		     String filename = ip_addr.getText();
 
 		     //////////////////////////////////////////////  
 		     //configure the connect button and use another thread to listen for data  
 		     graph.setVisible(true); 
+	}
+	
+	private void queue_initialize(LinkedList<Float> queue1, LinkedList<Float> queue2) {
+		queue1.clear();
+		queue2.clear();
+		for(int i=0; i<data_num; i++) {
+			queue1.add(0.0f);
+			queue2.add(0.0f);
+		}
 	}
 	
 	class get_sensor1_data extends Thread{
@@ -128,9 +134,8 @@ public class GUI extends javax.swing.JFrame{
 				}
 				System.out.println("sensor1: "+data);
 				//float data= (float)Math.random();
-				if(sensor1_fifo.size()>50) {
-					sensor1_fifo.removeFirst();
-				}
+
+				sensor1_fifo.removeFirst();
 				sensor1_fifo.add(data);
 				
 				float[] array = new float[sensor1_fifo.size()];
@@ -152,7 +157,7 @@ public class GUI extends javax.swing.JFrame{
 				}
 
 			     graph.setVisible(true); 
-			} 
+			}
 		}
 	}
 	
@@ -170,9 +175,7 @@ public class GUI extends javax.swing.JFrame{
 				
 				System.out.println("sensor2 data: "+data);
 				//float data= (float)Math.random();
-				if(sensor2_fifo.size()>50) {
-					sensor2_fifo.removeFirst();
-				}
+				sensor2_fifo.removeFirst();
 				sensor2_fifo.add(data);
 				
 				float[] array = new float[sensor2_fifo.size()];
@@ -193,14 +196,11 @@ public class GUI extends javax.swing.JFrame{
 					e.printStackTrace();
 				}
 			     graph.setVisible(true);  
-
-				
-				
 			}
-			
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
 	private void initComponents() {
 		SERVER = new javax.swing.JLabel();
 		SENSOR1 = new javax.swing.JLabel();
@@ -219,6 +219,7 @@ public class GUI extends javax.swing.JFrame{
 	    		 
 	      
 	    ip_addr = new javax.swing.JTextField();  
+	    ip_addr.setText("127.0.0.1");
 	      
 	    port1List = new javax.swing.JComboBox<>();  
 	    port2List = new javax.swing.JComboBox<>();   
@@ -288,21 +289,21 @@ public class GUI extends javax.swing.JFrame{
 	     });  
 	     
 	     port1List.addActionListener(new java.awt.event.ActionListener() {  
-		       public void actionPerformed(java.awt.event.ActionEvent evt) {  
+	    	 public void actionPerformed(java.awt.event.ActionEvent evt) {  
 		         port1ListActionPerformed(evt);  
 		       }  
 		     });
-	     port2List.addActionListener(new java.awt.event.ActionListener() {  
-		       public void actionPerformed(java.awt.event.ActionEvent evt) {  
-		         port2ListActionPerformed(evt);  
-		       }  
-		     }); 
+	     port2List.addActionListener(new java.awt.event.ActionListener() {
+		       public void actionPerformed(java.awt.event.ActionEvent evt) {
+		         port2ListActionPerformed(evt);
+		       }
+		     });
 	     
 	     jTabbedPane1.setTabPlacement(javax.swing.JTabbedPane.RIGHT);  
 	     jTabbedPane1.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N  
 	     ImGraph.setColumns(20);  
 	     ImGraph.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N  
-	     ImGraph.setRows(5);  
+	     ImGraph.setRows(5);
 	     
 	     ImgPane.setViewportView(ImGraph);  
 	     
@@ -337,7 +338,7 @@ public class GUI extends javax.swing.JFrame{
 	     serial_port_names = port1.get_port_names();
 	     ComPort_List = new String[serial_port_names.size()];
 	     for(int i=0; i<serial_port_names.size(); i++) {
-	    	 ComPort_List[i] = (String) serial_port_names.get(i);
+	    	 ComPort_List[i] = serial_port_names.get(i);
 	     }
 	     port1List.setModel(new javax.swing.DefaultComboBoxModel<>(ComPort_List));
 	     port2List.setModel(new javax.swing.DefaultComboBoxModel<>(ComPort_List));
@@ -348,26 +349,27 @@ public class GUI extends javax.swing.JFrame{
 	       .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
 	    		   .addComponent(jTabbedPane1)	  		       
 	  	           .addGroup(layout.createSequentialGroup()
-	  	        		   .addComponent(IP_label)
+	  	        		 .addComponent(IP_label)
 	  	        		 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
 	  	        				 .addComponent(SERVER, javax.swing.GroupLayout.PREFERRED_SIZE, 103, javax.swing.GroupLayout.PREFERRED_SIZE)
-	  	        				 .addComponent(Clear, 150, 150, 150)
-	  	    	        		 .addComponent(SENSOR1)
 	  	    	        		 .addComponent(ip_addr, 150, 150, 150)
+	  	    	        		 .addComponent(SENSOR1)
 	  	    	        		 .addComponent(port1List, 100, 100, 100)
 	  	    	        		 .addComponent(Sensor1_Connect, javax.swing.GroupLayout.PREFERRED_SIZE, 102, javax.swing.GroupLayout.PREFERRED_SIZE)
+	  	    	        		 .addComponent(Clear, 150, 150, 150)
 	  	    	        		 )
 	  	        		 .addGap(20, 20, 20)
 		        		 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-		        		 .addComponent(Server_Connect, 150, 150, 150)
-		        		 .addComponent(SENSOR2, javax.swing.GroupLayout.PREFERRED_SIZE, 103, javax.swing.GroupLayout.PREFERRED_SIZE)
-		        		 .addComponent(Sensor2_Connect, 100, 100, 100)
-		        		 .addComponent(port2List, 100, 100, 100))
+		        				 .addComponent(Server_Connect, 150, 150, 150)
+		        				 .addComponent(SENSOR2, javax.swing.GroupLayout.PREFERRED_SIZE, 103, javax.swing.GroupLayout.PREFERRED_SIZE)
+		        				 .addComponent(Sensor2_Connect, 100, 100, 100)
+		        				 .addComponent(port2List, 100, 100, 100))
+		        		 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+		        		 	.addGap(20, 20, 20))
 		        		 )
     		 )
 	         .addComponent(TextPane, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 950, Short.MAX_VALUE) 
-	     );  
-	     
+	     );
 	     
 	     layout.setVerticalGroup(
 	    		 layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -396,7 +398,7 @@ public class GUI extends javax.swing.JFrame{
 	    		 .addComponent(jTabbedPane1, javax.swing.GroupLayout.Alignment.TRAILING)  
 	  	         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
 	  	        		.addComponent(TextPane, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 578, Short.MAX_VALUE))
-	  	         );	         
+	  	         );
 	     pack();  
 	   }// </editor-fold>//GEN-END:initComponents  
 
@@ -447,37 +449,14 @@ public class GUI extends javax.swing.JFrame{
 	   }//GEN-LAST:event_RunActionPerformed  
 
 	   private void ClearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ClearActionPerformed  
-		   sensor1_graph.clear();
-		   sensor2_graph.clear();
-		   /*
-	     ImGraph.setText("");  
-	     ip_addr.setText("");  
-	     graph.setLayout(new BorderLayout());   
-	     JPanel topPanel = new JPanel();  
-	     graph.add(topPanel,BorderLayout.NORTH );   
-	     // create the line graph  
-	     XYSeries series = new XYSeries("Frist");  
-	     XYSeries series2 = new XYSeries("Second");  
-	     XYSeriesCollection dataset = new XYSeriesCollection();  
-	     dataset.addSeries(series);  
-	     dataset.addSeries(series2);  
-	     JFreeChart chart = ChartFactory.createXYLineChart("", "Time", "Reading", dataset, PlotOrientation.VERTICAL, true, true, false);  
-	     graph.add(new ChartPanel(chart),BorderLayout.BEFORE_LINE_BEGINS); /////////////////////////////  
-	     ChartPanel ch = new ChartPanel(chart);  
-	     XYPlot xyPlot = chart.getXYPlot();  
-	     org.jfree.chart.axis.ValueAxis domainAxis = xyPlot.getDomainAxis();  
-	     org.jfree.chart.axis.ValueAxis rangeAxis = xyPlot.getRangeAxis();  
-	     rangeAxis.setRange(0.0, 1100.0);  
-	     rangeAxis.setAutoRangeMinimumSize(0.1);   
-	     //configure the connect button and use another thread to listen for data 
-	      *   
-	      */
+		 sensor1_graph.clear();
+		 sensor2_graph.clear();
+
+		 queue_initialize(sensor1_fifo, sensor2_fifo);
 	     graph.setVisible(true);  
 	   }//GEN-LAST:event_ClearActionPerformed  
 
 	   private void port1ListActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_portListActionPerformed
-		   
-		   
 		   
 		   }//GEN-LAST:event_portListActionPerformed  
 	   private void port2ListActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_portListActionPerformed  
