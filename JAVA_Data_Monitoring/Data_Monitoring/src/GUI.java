@@ -2,7 +2,6 @@ import java.awt.BorderLayout;
 import java.awt.Color;  
 import java.io.IOException;
 import java.util.ArrayList;  
-import java.util.Scanner;  
 import java.util.LinkedList;
 
 import javax.swing.JPanel;   
@@ -27,15 +26,17 @@ public class GUI extends javax.swing.JFrame{
 	static double sensor1_thr = 1.2;		// Client에서 서버로 데이터를 전송하는 임계값
 	static double sensor2_thr = 0.7;
 	static int data_num = 50;				// GUI에 그래프를 나타내기 위한 데이터 수
-	private javax.swing.JButton Clear;
+	
+	// GUI의 컴포넌트 선언
+	public javax.swing.JButton Clear;
 	public Serial_Interface.Serial_Com port1, port2;
-	public ArrayList<String> serial_port_names;
-	public String[] ComPort_List;
-	public String Sensor1_Port, Sensor2_Port;
-	public JToggleButton Sensor1_Connect;
-	public JToggleButton Sensor2_Connect;
-	public JToggleButton Server_Connect;
-	public javax.swing.JTextField ip_addr;
+	private ArrayList<String> serial_port_names;
+	private String[] ComPort_List;
+	private String Sensor1_Port, Sensor2_Port;
+	private JToggleButton Sensor1_Connect;
+	private JToggleButton Sensor2_Connect;
+	private JToggleButton Server_Connect;
+	private javax.swing.JTextField ip_addr;
 	private javax.swing.JTextArea ImGraph;
 	private javax.swing.JTextArea jTextArea2; 
 	public javax.swing.JPanel graph; 
@@ -45,7 +46,7 @@ public class GUI extends javax.swing.JFrame{
 	private javax.swing.JLabel SENSOR2;  
 	private javax.swing.JScrollPane ImgPane;
 	private javax.swing.JScrollPane TextPane;
-	private javax.swing.JTabbedPane jTabbedPane1;  	// 탭이 되는 판넬
+	private javax.swing.JTabbedPane jTabbedPane1;
 	private Client client;
 	private javax.swing.JComboBox<String> port1List;
 	private javax.swing.JComboBox<String> port2List;
@@ -62,6 +63,7 @@ public class GUI extends javax.swing.JFrame{
 	private LinkedList<Float> sensor2_fifo;
 	
 	
+	
 	@Override
 	public String getTitle() {
 		return ("External Device Monitoring");
@@ -73,6 +75,8 @@ public class GUI extends javax.swing.JFrame{
 		graph_init();
 	}
     
+	
+	// Graph panel 초기화
 	private void graph_init() {
 		dataset = new XYSeriesCollection();  
 		chart = ChartFactory.createXYLineChart("", "Time", "Data", dataset, PlotOrientation.VERTICAL, true, true, false);
@@ -103,15 +107,12 @@ public class GUI extends javax.swing.JFrame{
 		     renderer.setSeriesLinesVisible(0, true);  
 		     renderer.setSeriesShapesVisible(0, false);
 		     xyPlot.setRenderer(renderer);
-		     //rangeAxis.setRange(0.0, 1.5);
 		     rangeAxis.setAutoRange(true);
 		     rangeAxis.setAutoRangeMinimumSize(0.1);
-
-		     //////////////////////////////////////////////  
-		     //configure the connect button and use another thread to listen for data  
 		     graph.setVisible(true); 
 	}
 	
+	// Clear버튼 입력시 그래프 초기화
 	private void queue_initialize(LinkedList<Float> queue1, LinkedList<Float> queue2) {
 		queue1.clear();
 		queue2.clear();
@@ -121,6 +122,7 @@ public class GUI extends javax.swing.JFrame{
 		}
 	}
 	
+	// Sensor1의 시리얼통신을 통해 전달받은 data를 도식화
 	class get_sensor1_data extends Thread{
 		static double prev_data = 0.0;
 		static int X = 0;
@@ -133,15 +135,12 @@ public class GUI extends javax.swing.JFrame{
 					prev_data = data;
 				}
 				System.out.println("sensor1: "+data);
-				//float data= (float)Math.random();
-
 				sensor1_fifo.removeFirst();
 				sensor1_fifo.add(data);
 				
 				float[] array = new float[sensor1_fifo.size()];
 				sensor1_graph.clear();
 				for(int i=0; i<sensor1_fifo.size(); i++) {
-					//System.out.println("sensor1_fifo["+i+"]: "+sensor1_fifo.get(i));
 					array[i] = sensor1_fifo.get(i);
 					X=i;
 					Y_1 = sensor1_fifo.get(i);
@@ -161,6 +160,7 @@ public class GUI extends javax.swing.JFrame{
 		}
 	}
 	
+	// Sensor2의 시리얼통신을 통해 전달받은 data를 도식화
 	class get_sensor2_data extends Thread{
 		static double prev_data = 0.0;
 		static int X = 0;
@@ -174,14 +174,12 @@ public class GUI extends javax.swing.JFrame{
 				}
 				
 				System.out.println("sensor2 data: "+data);
-				//float data= (float)Math.random();
 				sensor2_fifo.removeFirst();
 				sensor2_fifo.add(data);
 				
 				float[] array = new float[sensor2_fifo.size()];
 				sensor2_graph.clear();
 				for(int i=0; i<sensor2_fifo.size(); i++) {
-					//System.out.println("sensor2_fifo["+i+"]: "+sensor2_fifo.get(i));
 					array[i] = sensor2_fifo.get(i);
 					X=i;
 					Y_2 = sensor2_fifo.get(i);
@@ -200,24 +198,24 @@ public class GUI extends javax.swing.JFrame{
 		}
 	}
 	
+	// GUI 컴포넌트 초기화
 	@SuppressWarnings("unchecked")
 	private void initComponents() {
 		SERVER = new javax.swing.JLabel();
 		SENSOR1 = new javax.swing.JLabel();
 		SENSOR2 = new javax.swing.JLabel();
-		IP_label = new javax.swing.JLabel();
 		
+		IP_label = new javax.swing.JLabel();
 		client = new Client();
 		
 	    Sensor1_Connect = new JToggleButton();
 	    Sensor2_Connect = new JToggleButton();
 	    Server_Connect = new JToggleButton();
 		Clear = new javax.swing.JButton();
-
+		
 	    port1 = new Serial_Com();
 	    port2 = new Serial_Com();
-	    		 
-	      
+	    
 	    ip_addr = new javax.swing.JTextField();  
 	    ip_addr.setText("127.0.0.1");
 	      
@@ -236,21 +234,23 @@ public class GUI extends javax.swing.JFrame{
 	    setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);  
 	    setBackground(new java.awt.Color(204, 204, 204));  
 
-	    SERVER.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N  
+	    SERVER.setFont(new java.awt.Font("Tahoma", 1, 18)); 
 	    SERVER.setForeground(new java.awt.Color(0, 0, 0));  
 	    SERVER.setText("SERVER");  
-	    SENSOR1.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N  
+	    SENSOR1.setFont(new java.awt.Font("Tahoma", 1, 18));
 	    SENSOR1.setForeground(new java.awt.Color(0, 0, 0));  
 	    SENSOR1.setText("Sensor1");  
-	    SENSOR2.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N  
+	    SENSOR2.setFont(new java.awt.Font("Tahoma", 1, 18));
 	    SENSOR2.setForeground(new java.awt.Color(0, 0, 0));  
 	    SENSOR2.setText("Sensor2");
 
-	    IP_label.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N  
+	    IP_label.setFont(new java.awt.Font("Tahoma", 1, 14));
 	    IP_label.setForeground(new java.awt.Color(0, 0, 0));  
 	    IP_label.setText("IP");
 	    
-	    Sensor1_Connect.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N  
+	    
+	    // 버튼에 대한 정의 및 이벤트 처리함수 정의
+	    Sensor1_Connect.setFont(new java.awt.Font("Tahoma", 0, 14));
 	    Sensor1_Connect.setText("Connect1");  
 	    Sensor1_Connect.addActionListener(new java.awt.event.ActionListener() {  
 	       public void actionPerformed(java.awt.event.ActionEvent evt) {  
@@ -299,10 +299,12 @@ public class GUI extends javax.swing.JFrame{
 		       }
 		     });
 	     
+	     
+	     // 그래프를 띄우기 위한 panel 및 그래프 정의
 	     jTabbedPane1.setTabPlacement(javax.swing.JTabbedPane.RIGHT);  
-	     jTabbedPane1.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N  
+	     jTabbedPane1.setFont(new java.awt.Font("Tahoma", 0, 14));
 	     ImGraph.setColumns(20);  
-	     ImGraph.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N  
+	     ImGraph.setFont(new java.awt.Font("Tahoma", 0, 14));
 	     ImGraph.setRows(5);
 	     
 	     ImgPane.setViewportView(ImGraph);  
@@ -319,6 +321,8 @@ public class GUI extends javax.swing.JFrame{
 	     );
 	     jTabbedPane1.addTab("Plot", graph);  
 	     
+	     
+	     // 시리얼 통신으로 연결된 COM PORT가 없을 시 출력할 항목 정의
 	     port1List.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Sensor1", "COMPORT1" }));
 	     port2List.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Sensor2", "COMPORT2" }));
 	     
@@ -333,8 +337,7 @@ public class GUI extends javax.swing.JFrame{
 	     getContentPane().setLayout(layout);
 	     layout.setAutoCreateGaps(true);
 	     
-	     //port1List.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Sensor1", "COMPORT1" }));
-	     //port1List.setModel(new javax.swing.DefaultComboBoxModel<>(serial_port_names));
+	     // 리스트박스의 구성 추가
 	     serial_port_names = port1.get_port_names();
 	     ComPort_List = new String[serial_port_names.size()];
 	     for(int i=0; i<serial_port_names.size(); i++) {
@@ -344,6 +347,9 @@ public class GUI extends javax.swing.JFrame{
 	     port2List.setModel(new javax.swing.DefaultComboBoxModel<>(ComPort_List));
 	     
 	     
+	     
+	     
+	     // 컴포넌트의 레이아웃 정의
 	     layout.setHorizontalGroup(  
 	       layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING) 
 	       .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
@@ -403,50 +409,60 @@ public class GUI extends javax.swing.JFrame{
 	   }// </editor-fold>//GEN-END:initComponents  
 
 
+	
+	
+	// 이벤트 처리함수 구현
+	
 	   private void Sensor1_Connect_Performed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_RunActionPerformed
 		   Sensor1_Port = (String) port1List.getSelectedItem();
-		   if(Sensor1_Connect.isSelected()) {
+		   if(Sensor1_Connect.isSelected() && (Sensor1_Port != Sensor2_Port)) {
 			   try {
 				   port1.connect(Sensor1_Port);
 				   sensor1_stop = false;
 				   sensor1_thread = new get_sensor1_data();
 				   sensor1_thread.start();
 			   }	catch(Exception e) {
+				   Sensor1_Connect.setSelected(false);
 				   e.printStackTrace();
 			   }
 		   }
 		   else {
+			   Sensor1_Connect.setSelected(false);
 			   sensor1_stop = true;
 			   port1.disconnect();
 		   }
-	   }//GEN-LAST:event_RunActionPerformed
+	   }//GEN-LAST:event_Sensor1_Connect_Performed
 	   private void Sensor2_Connect_Performed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_RunActionPerformed 
 		   Sensor2_Port = (String) port2List.getSelectedItem();
-		   if(Sensor2_Connect.isSelected()) {
+		   if(Sensor2_Connect.isSelected() && (Sensor2_Port != Sensor1_Port)) {
 			   try {
 				   port2.connect(Sensor2_Port);
 				   sensor2_stop = false;
 				   sensor2_thread = new get_sensor2_data();
 				   sensor2_thread.start();
 			   }	catch(Exception e) {
+				   Sensor2_Connect.setSelected(false);
 				   e.printStackTrace();
 			   }
 		   }
 		   else {
+
+			   Sensor2_Connect.setSelected(false);
 			   sensor2_stop = true;
 			   port2.disconnect();
 		   }
-	   }//GEN-LAST:event_RunActionPerformed  
+	   }//GEN-LAST:event_Sensor2_Connect_Performed
 	   private void Server_Connect_Performed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_RunActionPerformed  
 		   if(Server_Connect.isSelected()) {
 			   String ip_address = ip_addr.getText();
 			   try {
 				   client.connect_to_server(ip_address);
 			   }	catch(IOException e) {
+				   Server_Connect.setSelected(false);
 					e.printStackTrace();
 			   }
 		   }
-	   }//GEN-LAST:event_RunActionPerformed  
+	   }//GEN-LAST:event_Server_Connect_Performed
 
 	   private void ClearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ClearActionPerformed  
 		 sensor1_graph.clear();
@@ -457,18 +473,14 @@ public class GUI extends javax.swing.JFrame{
 	   }//GEN-LAST:event_ClearActionPerformed  
 
 	   private void port1ListActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_portListActionPerformed
-		   
-		   }//GEN-LAST:event_portListActionPerformed  
+
+		   }//GEN-LAST:event_port1ListActionPerformed  
 	   private void port2ListActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_portListActionPerformed  
 		     // TODO add your handling code here:  
-		   }//GEN-LAST:event_portListActionPerformed  
+		   }//GEN-LAST:event_port2ListActionPerformed  
 
 
 	     
-
-	   /**  
-	    * @param args the command line arguments  
-	    */  
 	   public static void main(String args[]) {  
 
 	     /* Create and display the form */  

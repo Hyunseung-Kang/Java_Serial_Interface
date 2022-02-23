@@ -19,8 +19,9 @@ public class Serial_Com {
 	private OutputStream out;
 	public SerialRead reading;
 	public SerialWrite writing;
-
-	public ArrayList get_port_names(){
+	
+	// 시리얼 통신으로 연결된 COM_PORT의 항목을 얻기 위한 함구 구현
+	public ArrayList<String> get_port_names(){
 		Enumeration ports = CommPortIdentifier.getPortIdentifiers();
 		ArrayList port_names = new ArrayList();
 		while(ports.hasMoreElements()) {
@@ -40,13 +41,14 @@ public class Serial_Com {
 		return port_names;
 	}
 	
+	// 시리얼 통신을 종료하기 위한 함수 구현
 	public void disconnect() {
 		commPort.close();
 		reading.setStop(true);
 		writing.setStop(true);
 	}
 	
-	
+	// 시리얼 통신을 연결하기 위한 함수 구현
 	public void connect(String portName) throws Exception{
 		CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(portName);
 		if(portIdentifier.isCurrentlyOwned()) {
@@ -60,10 +62,8 @@ public class Serial_Com {
 			if(commPort instanceof SerialPort) {
 				SerialPort serialPort = (SerialPort) commPort;
 				serialPort.setSerialPortParams(9600,  SerialPort.DATABITS_8, SerialPort.STOPBITS_1, SerialPort.PARITY_NONE);
-				/////// 설정부분에서 InputStream에 대한 어떠한 정의가 추가적으로 필요하지 않을까?
 				
 				in = serialPort.getInputStream();
-				//input = new BufferedReader(new InputStreamReader(serialPort.getInputStream()));
 				out = serialPort.getOutputStream();
 				
 				reading = new SerialRead(in);

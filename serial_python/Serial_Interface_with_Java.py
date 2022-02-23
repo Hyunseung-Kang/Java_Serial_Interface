@@ -13,8 +13,6 @@ sigma, mu = 0.7, 0.2
 def gaussian_random(avg, cov):
     s = 1.0
     v1 = 0
-    v2 = 0
-    temp = 0
     while(s>=1 or s==0):
         v1 = 2*random.random()-1
         v2 = 2*random.random()-1
@@ -33,35 +31,24 @@ def sensor_processing(port_name, average):
     ser.close()
     ser.open()
     while(True):
-        line = ser.read(5).hex()
+        line = ser.read(4).hex()
         start = line[0:4]
         packet = bytearray()
         if(start == "5a04"):
-            packet.append(0xaa)
-            packet.append(0xff)
-            #data = random.random()
-            #data = gaussian_random(average, 0.4)
-            data = sigma * np.random.randn()+mu
-            #data = float(random.uniform(average-0.1, average+0.1))
-            #if port_name == "COM10":
-                #print("COM12 Data: ", data)
-            #if port_name == "COM12":
-                #print("COM14 Data: ", data)
+            packet.append(0x5a)
+            packet.append(0x04)
+            packet.append(0x05)
+            packet.append(0x00)
+            data = np.random.normal(average, 0.2)
             hex_data = bytearray(struct.pack("f", data))
             for i in range(len(hex_data)):
                 packet.append(hex_data[i])
-            packet.append(0xbb)
-            packet.append(0xbb)
         else:
             continue
         ser.write(packet)
-        #print("packet: ", packet.hex())
-        time.sleep(0.001)
+        time.sleep(0.01)
 
 
-
-
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     port1 = "COM10"
     port2 = "COM12"
@@ -70,4 +57,3 @@ if __name__ == '__main__':
     sensor1.start()
     sensor2.start()
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
